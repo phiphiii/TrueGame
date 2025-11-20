@@ -53,7 +53,7 @@ const Gate = ({ type = "AND", label }) => {
             border: "1px solid #ddd",
             borderRadius: 8,
             padding: 12,
-            width: 320,
+            width: 360,
             margin: 8,
             fontFamily: "sans-serif",
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
@@ -74,6 +74,78 @@ const Gate = ({ type = "AND", label }) => {
             justifyContent: "center",
             fontWeight: 700,
         },
+
+        /* replaced horizontal layout with vertical: output(top) -> gate -> inputs(bottom) */
+        bodyColumn: {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 10,
+        },
+        gateArea: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 120,
+            /* allow lines to visually overlap gate */
+            paddingTop: 6,
+            paddingBottom: 6,
+            position: "relative",
+            zIndex: 1,
+            background: "transparent",
+        },
+        /* vertical output line above gate */
+        outputLine: {
+            width: 6,
+            height: 56,
+            background: out ? "#2ecc71" : "#e74c3c",
+            marginTop: 0,
+            /* overlap slightly with gate */
+            marginBottom: -40,
+        },
+        /* inputs placed horizontally under gate, each with vertical line */
+        inputsRow: {
+            display: "flex",
+            gap: 18,
+            justifyContent: "center",
+            alignItems: "flex-start",
+            marginTop: 6,
+        },
+        inputColumn: {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+        },
+        inputVerticalLine: (val) => ({
+            width: 6,
+            height: 50,
+            background: val ? "#2ecc71" : "#e74c3c",
+
+            /* overlap slightly into gate area so it's visually connected */
+            marginTop: -38,
+        }),
+        inputButton: (val) => ({
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            background: val ? "#2ecc71" : "#e74c3c",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            cursor: "pointer",
+            userSelect: "none",
+            border: "2px solid rgba(0,0,0,0.06)",
+        }),
+
+        controlsRow: {
+            marginTop: 10,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+        },
     };
 
     return (
@@ -82,23 +154,41 @@ const Gate = ({ type = "AND", label }) => {
                 <div style={{ fontSize: 14, fontWeight: 600 }}>
                     {label || type}
                 </div>
-                <div style={style.output}>{out ? 1 : 0}</div>
+                
             </div>
 
-            {/* tutaj wstawiamy grafikę bramki */}
-            <div style={{ marginTop: 8, marginBottom: 8, display: "flex", justifyContent: "center" }}>
-                <GatesSvg className="" name={type} />
+            {/* body: output(top) -> gate center -> inputs(bottom) */}
+            <div style={style.bodyColumn}>
+                {/* output indicator on top with connecting line into gate */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={style.output}>{out ? 1 : 0}</div>
+                    <div style={style.outputLine} />
+                </div>
+
+                {/* gate SVG center */}
+                <div style={style.gateArea}>
+                    <GatesSvg className="" name={type} inputs={numInputs}/>
+                </div>
+
+                {/* inputs row: each input has a vertical line going up into the gate */}
+                <div style={style.inputsRow}>
+                    {inputs.map((val, i) => (
+                        <div key={i} style={style.inputColumn}>
+                            <div style={style.inputVerticalLine(val)} />
+                            <div
+                                role="button"
+                                aria-label={`input-${i}`}
+                                onClick={() => toggle(i)}
+                                style={style.inputButton(val)}
+                            >
+                                {val ? 1 : 0}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div
-                style={{
-                    marginTop: 8,
-                    marginBottom: 8,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
+            <div style={style.controlsRow}>
                 <div style={{ fontSize: 12 }}>Inputs:</div>
                 <div>
                     <select

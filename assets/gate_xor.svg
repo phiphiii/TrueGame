@@ -1,14 +1,23 @@
-<svg height="100" width="100" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="none">
+  <g>
+  <defs>
+    <clipPath id="left-half">
+      <rect x="0" y="0" width="50" height="100"/>
+    </clipPath>
+    <clipPath id="right-half">
+      <rect x="50" y="0" width="50" height="100"/>
+    </clipPath>
+    <mask id="hole-mask">
+      <rect x="0" y="0" width="100" height="100" fill="white"/>
+      <ellipse cx="50" cy="124" rx="52" ry="45" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#hole-mask)">
+    <ellipse cx="-145" cy="155" rx="249" ry="242" fill="white" stroke="black" stroke-width="5" clip-path="url(#right-half)"/>
+    <ellipse cx="245" cy="155" rx="249" ry="242" fill="white" stroke="black" stroke-width="5" clip-path="url(#left-half)"/>
+    <ellipse cx="50" cy="120" rx="52" ry="43" stroke="black" stroke-width="5"/>
+  </g>
+  <ellipse cx="50" cy="128" rx="50" ry="43" stroke="black" stroke-width="5"/>
+</g>
 
-  <path d="
-    M 50 7                 
-    C 25 40, 15 55, 4 85       
-    C 25 65, 85 70, 96 85      
-    C 85 55, 75 40, 50 7     
-    Z                     
-  " fill="white" stroke="black" stroke-width="5"/>
-  <path d="
-    M 2 97                 
-    C 20 75, 78 75, 98 98     
-  " fill="none" stroke="black" stroke-width="5"/>
 </svg>
