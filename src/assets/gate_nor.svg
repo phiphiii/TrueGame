@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="none">
+  <g>
+  <defs>
+    <clipPath id="left-half">
+      <rect x="0" y="0" width="50" height="100"/>
+    </clipPath>
+    <clipPath id="right-half">
+      <rect x="50" y="0" width="50" height="100"/>
+    </clipPath>
+    <mask id="hole-mask">
+      <rect x="0" y="0" width="100" height="100" fill="white"/>
+      <ellipse cx="50" cy="124" rx="52" ry="45" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#hole-mask)">
+    <ellipse cx="-145" cy="155" rx="251" ry="220" fill="white" stroke="black" stroke-width="5" clip-path="url(#right-half)"/>
+    <ellipse cx="245" cy="155" rx="251" ry="220" fill="white" stroke="black" stroke-width="5" clip-path="url(#left-half)"/>
+    <ellipse cx="50" cy="120" rx="52" ry="43" stroke="black" stroke-width="5"/>
+    <circle r="6" cx="50" cy="9" fill="white" stroke="black" stroke-width="5" />
+  </g>
+</g>
+
+
+</svg>
