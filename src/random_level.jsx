@@ -1,42 +1,56 @@
 import React, { useState, useEffect } from "react";
-import { Gate, computeOutput } from "./logic_gates.jsx";
+import GatesSvg from "./gates_svg.jsx";
 import "./index.css";
 
 const gateTypes = ["AND","OR","XOR","NAND","NOR","XNOR"];
 
+function computeOutput(type, inputs) {
+    const vals = inputs.map(Boolean);
+    const countTrue = vals.filter(Boolean).length;
+    switch (type) {
+        case "AND": return vals.length > 0 && vals.every(Boolean);
+        case "OR": return vals.some(Boolean);
+        case "XOR": return countTrue % 2 === 1;
+        case "NAND": return !(vals.length > 0 && vals.every(Boolean));
+        case "NOR": return !vals.some(Boolean);
+        case "XNOR": return countTrue % 2 === 0;
+        case "NOT": return !vals[0];
+        default: return false;
+    }
+}
+
 function makePyramid(levels = 4) {
     const rows = [];
     
-    // First row - gates with their own inputs (2-4 each)
-    const firstGateCount = Math.max(1, 2 ** (levels - 2));
-    const firstRow = [];
-    for (let i = 0; i < firstGateCount; i++) {
-        const numInputs = Math.min(2 + Math.floor(Math.random() * 3), 4);
-        const t = gateTypes[Math.floor(Math.random() * gateTypes.length)];
-        firstRow.push({ 
-            type: t, 
-            value: false, 
-            inputCount: numInputs,
-            inputs: Array.from({ length: numInputs }, (_, idx) => ({ gateIdx: i, inputIdx: idx, value: false }))
-        });
-    }
-    rows.push(firstRow);
+    // Generate first row of gates with random number of inputs each
+    const firstRowGateCount = Math.max(1, 2 ** (levels - 2));
+    const firstRowGates = [];
+    let totalInputs = 0;
     
-    // Upper rows - gates that take input from gates below
-    for (let r = 1; r < levels - 1; r++) {
+    for (let i = 0; i < firstRowGateCount; i++) {
+        const numInputs = 2 + Math.floor(Math.random() * 3); // 2-4 inputs
+        const t = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+        const inputIndices = [];
+        for (let j = 0; j < numInputs; j++) {
+            inputIndices.push(totalInputs + j);
+        }
+        totalInputs += numInputs;
+        firstRowGates.push({ type: t, value: false, inputs: inputIndices });
+    }
+    
+    // Create input nodes
+    const bottom = Array.from({ length: totalInputs }).map(() => ({ type: "INPUT", value: false }));
+    rows.push(bottom);
+    rows.push(firstRowGates);
+    
+    // Build upper rows
+    for (let r = 2; r < levels; r++) {
         const prev = rows[r - 1];
+        const count = Math.floor(prev.length / 2);
         const row = [];
-        let i = 0;
-        
-        while (i < prev.length) {
-            const numInputs = Math.min(2 + Math.floor(Math.random() * 3), prev.length - i);
+        for (let i = 0; i < count; i++) {
             const t = gateTypes[Math.floor(Math.random() * gateTypes.length)];
-            const inputs = [];
-            for (let j = 0; j < numInputs; j++) {
-                inputs.push(i + j);
-            }
-            row.push({ type: t, value: false, inputs: inputs });
-            i += numInputs;
+            row.push({ type: t, value: false, inputs: [i * 2, i * 2 + 1] });
         }
         rows.push(row);
     }
@@ -44,19 +58,7 @@ function makePyramid(levels = 4) {
 }
 
 function evaluateRows(rows) {
-    const next = rows.map(row => row.map(n => ({ ...n })));
-    
-    // Evaluate first row - compute from its own inputs
-    if (next.length > 0) {
-        next[0].forEach(node => {
-            if (node.inputCount !== undefined) {
-                const inputValues = node.inputs.map(inp => inp.value);
-                node.value = computeOutput(node.type, inputValues);
-            }
-        });
-    }
-    
-    // Evaluate upper rows - compute from gates below
+    const next = rows.map(row => row.map(n => ({ ...n, inputs: n.inputs ? [...n.inputs] : undefined })));
     for (let r = 1; r < next.length; r++) {
         const prev = next[r - 1];
         const row = next[r];
@@ -69,22 +71,30 @@ function evaluateRows(rows) {
     return next;
 }
 
+function generateValidLevel(levels = 4, maxTries = 50) {
+    let evaluated = evaluateRows(makePyramid(levels));
+    let tries = 1;
+
+    while (evaluated[evaluated.length - 1]?.[0]?.value && tries < maxTries) {
+        evaluated = evaluateRows(makePyramid(levels));
+        tries += 1;
+    }
+
+    return evaluated;
+}
+
 export default function RandomLevel({ onBack }) {
     const [levels] = useState(4);
-    const [rows, setRows]gateIdx, inputIdx) {
-        setRows(prev => {
-            const next = prev.map(row => row.map(n => ({ ...n })));
-            const gate = next[0][gateIdx];
-            const input = gate.inputs[inputIdx];
-            if (input) {
-                input.value = !input.value;
-            }
+    const [rows, setRows] = useState(() => generateValidLevel(levels));
+    const [won, setWon] = useState(false);
+
+    useEffect(() => {
         const top = rows[rows.length - 1]?.[0];
         setWon(!!top && !!top.value);
     }, [rows]);
 
     function regenerate() {
-        setRows(evaluateRows(makePyramid(levels)));
+        setRows(generateValidLevel(levels));
     }
 
     function toggleInput(index) {
@@ -109,68 +119,68 @@ export default function RandomLevel({ onBack }) {
                 </div>
             </div>
 
-            <div className="pyramid" style={{ display: "flex", flexDirection: "column-reverse", gap: 18, alignItems: "center" }}>
-                {rows.slice(1).map((row, rIdx) => {
-                    const r = rIdx + 1;
-                    return (
-                        <div key={r} className="pyramid-row" style={{ display: "flex", gap: 18, justifyContent: "center" }}>
-                            {row.map((node, i) => (
-                                <div key={i} className="pyramid-node" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-                                    {r === rows.length - 1 && (
-                                        <>
-                                            <div className={`gate-output ${node.value ? "on" : ""}`}>
-                                                {node.value ? 1 : 0}
+            <div className="pyramid" style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
+                {rows.slice().reverse().map((row, displayRowIndex) => {
+                    const r = rows.length - 1 - displayRowIndex;
+                    
+                    if (r === 0) {
+                        // Bottom row - pair inputs with gates from row 1
+                        const nextRow = rows[1];
+                        return (
+                            <div key={r} className="pyramid-row" style={{ display: "flex", gap: 18, justifyContent: "center" }}>
+                                {nextRow.map((gate, gateIdx) => (
+                                    <div key={gateIdx} className="pyramid-node" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                                        <div className="gate-card" style={{ width: 220, padding: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                           
+                                            <div style={{ textAlign: "center", color: gate.value ? "var(--accent-green)" : "var(--accent-red)", fontWeight: 700, marginBottom: 10 }}>
+                                                {gate.value ? 1 : 0}
                                             </div>
-                                            <div className={`pyramid-output-line ${node.value ? "on" : ""}`} />
-                                        </>
-                                    )}
-                                    {r < rows.length - 1 && (
-                                        <div className={`pyramid-gate-output-line ${node.value ? "on" : ""}`} />
-                                    )}
-                                    <div className="gate-card" style={{ width: 140, padding: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <div style={{ width: 96, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                            <Gate type={node.type} numInputs={node.inputs.length} scale={0.6} />
+                                            <div style={{ width: 200, height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <GatesSvg name={gate.type} className="" scale={0.8} inputs={gate.inputs.length} />
+                                            </div>
+                                            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                                                {gate.inputs.map((inputIdx) => (
+                                                    <div
+                                                        key={inputIdx}
+                                                        role="button"
+                                                        onClick={() => toggleInput(inputIdx)}
+                                                        className={`gate-input-button ${row[inputIdx]?.value ? "on" : ""}`}
+                                                        style={{ width: 40, height: 40, borderRadius: 40, fontSize: 14 }}
+                                                    >
+                                                        {row[inputIdx]?.value ? 1 : 0}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ height: 8 }} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    }
+                    
+                    if (r === 1) {
+                        return null;
+                    }
+                    
+                    return (
+                        <div key={r} className="pyramid-row" style={{ display: "flex", gap: 300, justifyContent: "center" }}>
+                            {row.map((node, i) => (
+                                <div key={i} className="pyramid-node" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                    <div className="gate-card" style={{ width: 200, padding: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <div style={{ textAlign: "center", color: node.value ? "var(--accent-green)" : "var(--accent-red)", fontWeight: 700, marginBottom: 10 }}>
+                                            {node.value ? 1 : 0}
+                                        </div>
+                                        <div style={{ width: 200, height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <GatesSvg name={node.type} className="" scale={0.8} inputs={node.inputs.length} />
                                         </div>
                                         <div style={{ height: 8 }} />
                                     </div>
                                 </div>
                             ))}
-                    First row gates with their own inputs */}
-                {rows.length > 1 && (
-                    <div style={{ display: "flex", gap: 18, justifyContent: "center" }}>
-                        {rows[0].map((gateNode, gateIdx) => (
-                            <div key={gateIdx} style={{ display: "flex", gap: 0, flexDirection: "column", alignItems: "center" }}>
-                                {gateNode.inputs && gateNode.inputs.map((input, inputIdx) => (
-                                    <div key={inputIdx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-                                        <div className={`pyramid-input-line ${input.value ? "on" : ""}`} />
-                                        <div
-                                            role="button"
-                                            onClick={() => toggleInput(gateIdx, inputIdx)}
-                                            className={`gate-input-button ${input.value ? "on" : ""}`}
-                                            style={{ width: 48, height: 48, borderRadius: 48, fontSize: 16 }}
-                                        >
-                                            {input.value ? 1 : 0}
-                                        </div>
-                                    </div>
-                                ))}
-                                <div style={{ height: 8 }} />
-                                <div className="gate-card" style={{ width: 140, padding: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                    <div style={{ width: 96, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <Gate type={gateNode.type} numInputs={gateNode.inputCount} scale={0.6} />
-                                    </div>
-                                    <div style={{ height: 8 }} />
-                                    <div style={{ textAlign: "center", color: gateNode.value ? "var(--accent-green)" : "var(--accent-red)", fontWeight: 700 }}>
-                                        {gateNode.value ? 1 : 0}
-                                    </div>
-                                </div>     >
-                                            {rows[0][inputIdx].value ? 1 : 0}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

@@ -1,16 +1,34 @@
-# React + Vite
+# True Game 🎮
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interaktywna gra logiczna oparta na bramkach logicznych (logic gates). Celem gracza jest ustawienie wejść tak, aby wyjście na szczycie piramidy bramek było prawdziwe (TRUE).
 
-Currently, two official plugins are available:
+## O projekcie
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+True Game to edukacyjna gra logiczna, w której:
+- Manipulujesz wejściami bramek logicznych (AND, OR, XOR, NAND, NOR, XNOR)
+- Bramki tworzą piramidę, gdzie każda warstwa przekazuje wynik do następnej
+- Twoim celem jest uzyskanie wartości TRUE na ostatniej bramce
 
-## React Compiler
+## Technologie
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React** 19 - interfejs użytkownika
+- **Vite** - narzędzie do budowania i deweloperki
+- **SVG** - niestandardowe grafiki bramek logicznych
+- Responsywny dark/light mode
 
-## Expanding the ESLint configuration
+## Uruchomienie projektu
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
+
+## Rozwój przy wsparciu AI
+
+Projekt został stworzony z pomocą nowoczesnych narzędzi AI:
+- **Google Gemini** - wsparcie w implementacji logiki i generowaniu pomysłów
+- **GitHub Copilot** - asystent kodowania i optymalizacja kodu
+
+## Licencja
+
+Projekt edukacyjny
